@@ -49,9 +49,11 @@ In this project, we explore the different facets of gender pay gaps in the Unite
     - Represent the values of female and male percentages by dots with two contrasting colors, with a line connecting two dots within the same year.
 
 
-- Question 3:
-    - Variables:
-    - Approach:
+- Question 3: What is the distribution of population across income groups by gender?
+    - Variables:  `MaleLowerQuartile`, `FemaleLowerQuartile`, `MaleLowerMiddleQuartile`, `FemaleLowerMiddleQuartile`, `MaleUpperMiddleQuartile`, `FemaleUpperMiddleQuartile`, `MaleTopQuartile`, `FemaleTopQuartile`
+    - Approach: As we have the percentage of the population by pay quartile, we can plot the distribution of population across the income groups by gender.
+
+
 
 
 ## 4. Data Preprocessing 
