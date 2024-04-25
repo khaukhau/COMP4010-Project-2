@@ -27,9 +27,8 @@ In this project, we explore the different facets of gender pay gaps in the Unite
 - **Github Link:** https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-06-28  
 
 
-
 ## 3. Question for Analysis 
-#### **Theme:** On each sector, what are the paygap, paygap change over year, and distribution of population among gender? #TO EDIT!
+#### **Theme:** Various aspects of the pay gap between females and males in the UK in selected sectors. 
 
 **Approach**: Dropdown to choose target sector. When selected, show graphs that analyze within the sector the following questions:
 
@@ -51,9 +50,9 @@ In this project, we explore the different facets of gender pay gaps in the Unite
 
 - Question 3: What is the distribution of population across income groups by gender?
     - Variables:  `MaleLowerQuartile`, `FemaleLowerQuartile`, `MaleLowerMiddleQuartile`, `FemaleLowerMiddleQuartile`, `MaleUpperMiddleQuartile`, `FemaleUpperMiddleQuartile`, `MaleTopQuartile`, `FemaleTopQuartile`
-    - Approach: As we have the percentage of the population by pay quartile, we can plot the distribution of population across the income groups by gender.
-
-
+    - Approach:
+        - A distribution graph of females and males divided by income groups.
+        - As we have the percentage of the population by pay quartile, we can plot the distribution of population across the income groups by gender.
 
 
 ## 4. Data Preprocessing 
