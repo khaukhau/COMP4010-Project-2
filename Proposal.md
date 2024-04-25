@@ -64,14 +64,24 @@ As we want to do our analysis broadly by sectors, we will create a new data fram
 **Step 3:** For the remaining uncategorized companies, we will merge by SIC code with `SIC07_CH_condensed_list_en` data frame to get `description`, which describes the employer's purpose and sectors of work at the time of reporting, to manually categorize. Recursively add new keywords representing sectors that we may have missed in step 2.
 
 ## 5. Weekly plan
-| Week | Milestone | Description |
-| --- | --- | --- |
-| 1    | Kick-off | - Meet the new team <br> - Establish the working style <br> - Research & brainstorm the idea |
-| 2    | Project Proposal | - Choose the idea via combining and selecting each member's idea <br> - Draft the proposal |
-| 3    | Project Proposal | - Finalize the proposal (including the research question and main method) <br> - Submit proposal and its related documents |
-| 4    | Revised Proposal & Peer Review | - Conduct peer review <br> - Revise the proposal and reply to our peers and instructors' feedback <br> - Set up the code structure <br> - (If necessary) Learning the framework Shiny to build a dashboard |
-| 5    | Hands-on & Implementation | - Learn the framework Shiny <br> - Plot all graphs (its content is prioritized) |
-| 6    | Hands-on & Implementation | - Build a dashboard to display all graphs <br> - Preparing the theme for both graph and hosting dashboard |
-| 7    | Hands-on & Implementation | - Finalize the dashboard and graph (content and theme must be completed) <br> - Prepare the content of report and presentation |
-| 8    | Finalizing stage | - Finalize source code/repository & report & presentation <br> - Submit our work |
+**Team Member's role**
+| Name | Role |
+| --- | --- |
+| Khau Lien Kiet | Project Manager (PM), Quality Engineer (QE), Developer (Dev) |
+| Hoang Khoi Nguyen | Developer (Dev) |
+| Nguyen Duy Anh Quan | Developer (Dev) |
+
+
+**Plan**
+| Week | Milestone | Description | PIC |
+| --- | --- | --- | --- |
+| 1    | Kick-off | - Meet the new team <br> - Establish the working style <br> - Research & brainstorm the idea | PM
+| 2    | Project Proposal | - Choose the idea via combining and selecting each member's idea <br> - Draft the proposal | PM & Dev|
+| 3    | Project Proposal | - Finalize the proposal (including the research question and main method) <br> - Submit proposal and its related documents | PM |
+| 4    | Revised Proposal & Peer Review | - Conduct peer review <br> - Revise the proposal and reply to our peers and instructors' feedback <br> - Set up the code structure <br> - (If necessary) Learning the framework Shiny to build a dashboard | PM & Dev |
+| 5    | Hands-on & Implementation | - Learn the framework Shiny <br> - Plot all graphs (its content is prioritized) | Dev & QE |
+| 6    | Hands-on & Implementation | - Build a dashboard to display all graphs <br> - Preparing the theme for both graph and hosting dashboard | Dev |
+| 7    | Hands-on & Implementation | - Finalize the dashboard and graph (content and theme must be completed) <br> - Prepare the content of report and presentation | Dev & QE & PM |
+| 8    | Finalizing stage | - Finalize source code/repository & report & presentation <br> - Submit our work | PM |
+
 
