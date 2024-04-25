@@ -29,17 +29,26 @@ In this project, we explore the different facets of gender pay gaps in the Unite
 
 
 ## 3. Question for Analysis 
-**Theme:** On each sector, what are the paygap, paygap change over year, and distribution of population among gender? 
-- Question 1: How is the difference in paygap with respect to the hourly pay in these sectors (i.e. Technology, Airline, Pharmaceutical/Medical, Financial, Bank, Hotel, Consulting, Accounting, Marketing, School/Education, Travel, etc.)?
+#### **Theme:** On each sector, what are the paygap, paygap change over year, and distribution of population among gender? #TO EDIT!
+
+**Approach**: Dropdown to choose target sector. When selected, show graphs that analyze within the sector the following questions:
+
+- Question 1: How is the difference in paygap with respect to the hourly pay?
     - Variables: `current_name`, `diff_mean_hourly_percent`
     - Approach: 
         - Utilize a bar chart, which displays as a pyramid, on each sector
         - Create a data frame for all companies in the same sector. Place `diff_mean_hourly_percent` on x_axis and `current_name` known as the company name on y_axis. This could be achieved by using ggplot2.
         - Ensure the chart provides a consistent theme among each sector’s plot and use a contrast color scheme to distinguish between the genders.
 
-- Question 2:
-    - Variables:
-    - Approach:
+- Question 2: How do the percentages of females vs. males in an hourly pay quartile range change from 2017 to 2023?
+  - Variables:
+    - Pairs in `MaleLowerQuartile`, `FemaleLowerQuartile`, `MaleLowerMiddleQuartile`, `FemaleLowerMiddleQuartile`, `MaleUpperMiddleQuartile`, `FemaleUpperMiddleQuartile`, `MaleTopQuartile`, `FemaleTopQuartile`
+  - Approach:
+    - An interactive dropdown to choose quartile range.
+    - For each hourly pay quartile range, the y-axis represents the year, and the x-axis represents the female and male percentages in that quartile range.
+    - Represent the values of female and male percentages by dots with two contrasting colors, with a line connecting two dots within the same year.
+
+
 - Question 3:
     - Variables:
     - Approach:
