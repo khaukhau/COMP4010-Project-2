@@ -1,0 +1,25 @@
+---
+title: "Project-2-source-code"
+output: html_document
+date: "2024-05-06"
+---
+
+## Preparing task
+
+Library import
+```{r}
+library(tidyverse)
+#install.packages("vroom")
+library(vroom)
+#install.packages("fs")
+library(fs)
+library(readr)
+```
+
+Data import
+```{r}
+paygap <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-06-28/paygap.csv')
+```
+## Task 1
+
+## Task 2
