@@ -1,0 +1,82 @@
+---
+title: "Project-2-source-code"
+output: html_document
+date: "2024-05-06"
+---
+
+## Preparing task
+
+Library import
+
+```{r}
+library(tidyverse)
+#install.packages("vroom")
+library(vroom)
+#install.packages("fs")
+library(fs)
+library(readr)
+library(dplyr)
+```
+
+Data import
+
+```{r, message=FALSE, warning=FALSE}
+paygap_2017_2018 <- read_csv('data/raw/paygap_2017_2018.csv')
+paygap_2018_2019 <- read_csv('data/raw/paygap_2018_2019.csv')
+paygap_2019_2020 <- read_csv('data/raw/paygap_2019_2020.csv')
+paygap_2020_2021 <- read_csv('data/raw/paygap_2020_2021.csv')
+paygap_2021_2022 <- read_csv('data/raw/paygap_2021_2022.csv')
+```
+
+We want to filter out companies that have consistently reported every year for 2018 to 2022
+
+```{r}
+paygaps_2018_2022 <- list(paygap_2017_2018, paygap_2018_2019, paygap_2019_2020, paygap_2020_2021, paygap_2021_2022)
+
+# Extract EmployerIDs and compute the intersection of all sets
+common_employer_ids <- Reduce(intersect, lapply(paygaps_2018_2022, function(df) df$EmployerId))
+
+# Filter each dataframe to keep only rows with common EmployerIDs
+filtered_paygaps_2018_2022 <- lapply(paygaps_2018_2022, function(df) {
+  filter(df, EmployerId %in% common_employer_ids)
+})
+
+# As some companies submitted multiple times a year, filter to keep only the latest entry 
+filter_latest_entry <- function(df, date_column) {
+  df %>%
+    group_by(EmployerId) %>%
+    slice_max(order_by = get(date_column)) %>%
+    ungroup()  # Always good practice to ungroup after grouping
+}
+
+filtered_paygaps_2018_2022 <- lapply(filtered_paygaps_2018_2022, function(df) {
+  filter_latest_entry(df, "DateSubmitted")
+})
+
+#Make sure
+print(nrow(filtered_paygaps_2018_2022[[1]]))
+print(nrow(filtered_paygaps_2018_2022[[2]]))
+print(nrow(filtered_paygaps_2018_2022[[3]]))
+print(nrow(filtered_paygaps_2018_2022[[4]]))
+print(nrow(filtered_paygaps_2018_2022[[5]]))
+
+# Combine all dataframes together
+combined_paygap <- do.call(rbind, filtered_paygaps_2018_2022)
+nrow(combined_paygap) #5579 * 5 = 27895
+
+# Just get filtered companies name and SIC code
+company_list <- filtered_paygaps_2018_2022[[1]] %>%
+  select(SicCodes, EmployerName, EmployerId)
+```
+Write to CSV
+```{r}
+# directory_path <- "data/cleaned"
+# if (!dir.exists(directory_path)) {
+#   dir.create(directory_path, recursive = TRUE)
+# }
+# file_path_all <- paste0(directory_path, '/paygaps_2018_2022.csv')
+# file_path_company <- paste0(directory_path, '/companies.csv')
+# write.csv(combined_paygap, file_path_all, row.names = FALSE)
+# write.csv(company_list, file_path_company, row.names = FALSE)
+```
+
