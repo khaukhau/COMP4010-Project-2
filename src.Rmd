@@ -14,12 +14,16 @@ library(vroom)
 #install.packages("fs")
 library(fs)
 library(readr)
+library(dplyr)
 ```
 
-Data import
+After processing, cleaned data would be used
 ```{r}
-paygap <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-06-28/paygap.csv')
+paygap <- read_csv('data/cleaned/paygaps_2018_2022.csv')
+companies <- read_csv('data/cleaned/companies.csv')
 ```
-## Task 1
+## Task 1 (Kiet)
 
-## Task 2
+## Task 2 (Nguyen)
+
+## Task 3 (Quan)
