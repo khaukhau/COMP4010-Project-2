@@ -22,6 +22,82 @@ After processing, cleaned data would be used
 paygap <- read_csv('data/cleaned/paygaps_2018_2022.csv')
 companies <- read_csv('data/cleaned/companies.csv')
 ```
+Filtered by sector
+```{r}
+# Function to filter sector by keyword
+filter_by_keyword <- function(df, keywords) {
+  pattern <- paste(keywords, collapse = "|")
+  filtered_df <- df[grep(pattern, df$CurrentName, ignore.case = TRUE ),]
+  return(filtered_df)
+}
+```
+
+```{r}
+# Test on the Technology sector
+keywords_tech_sector <- c("Tech", "IT") 
+tech_sector_df <- filter_by_keyword(paygap, keywords_tech_sector)
+```
+
+```{r}
+keywords_financial_sector <- c("Financial", "Finance", "Insurance")
+financial_sector_df <- filter_by_keyword(paygap, keywords_financial_sector)
+```
+
+```{r}
+keywords_bank_sector <- c("Bank")
+bank_sector_df <- filter_by_keyword(paygap, keywords_bank_sector)
+```
+
+```{r}
+keywords_med_sector <- c("Medical", "Pharmaceutical", "Health")
+med_sector_df <- filter_by_keyword(paygap, keywords_med_sector)
+```
+
+```{r}
+keywords_hotel_sector <- c("Hotel")
+hotel_sector_df <- filter_by_keyword(paygap, keywords_hotel_sector)
+```
+
+```{r}
+keywords_marketing_sector <- c("Marketing")
+marketing_sector_df <- filter_by_keyword(paygap, keywords_marketing_sector)
+```
+
+```{r}
+keywords_education_sector <- c("Education", "School")
+education_sector_df <- filter_by_keyword(paygap, keywords_education_sector)
+```
+
+```{r}
+keywords_consulting_sector <- c("Consulting")
+consulting_sector_df <- filter_by_keyword(paygap, keywords_consulting_sector)
+```
+
+```{r}
+keywords_travel_sector <- c("Travel")
+travel_sector_df <- filter_by_keyword(paygap, keywords_travel_sector)
+```
+
+```{r}
+keywords_accounting_sector <- c("Accounting")
+accounting_sector_df <- filter_by_keyword(paygap, keywords_accounting_sector)
+```
+
+```{r}
+keywords_airline_sector <- c("Airline")
+airline_sector_df <- filter_by_keyword(paygap, keywords_airline_sector)
+```
+
+```{r}
+keywords_entertainment_sector <- c("Entertainment", "Art", "Recreation")
+entertainment_sector_df <- filter_by_keyword(paygap, keywords_entertainment_sector)
+```
+
+```{r}
+keywords_retail_sector <- c("Retail")
+retail_sector_df <- filter_by_keyword(paygap, keywords_retail_sector)
+```
+
 ## Task 1 (Kiet)
 
 ## Task 2 (Nguyen)
