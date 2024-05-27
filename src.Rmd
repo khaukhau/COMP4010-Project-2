@@ -5,7 +5,6 @@ date: "2024-05-06"
 ---
 
 ## Preparing task
-
 Library import
 ```{r}
 library(tidyverse)
@@ -15,6 +14,12 @@ library(vroom)
 library(fs)
 library(readr)
 library(dplyr)
+library(plotly)
+#install.packages("plotly")
+library(shiny)
+library(bslib)
+library(bsicons)
+
 ```
 
 After processing, cleaned data would be used
@@ -99,7 +104,162 @@ retail_sector_df <- filter_by_keyword(paygap, keywords_retail_sector)
 ```
 
 ## Task 1 (Kiet)
+```{r}
+marketing_sector_df$DiffMeanHourlyPercent <- as.numeric(marketing_sector_df$DiffMeanHourlyPercent)
+marketing_sector_df$Year <- year(marketing_sector_df$DueDate)
 
+```
+
+```{r}
+# Create a function to plot diverging bar chart for a specific year
+plot_diverging_bar_chart <- function(data, year, sector_name) {
+  #Filter by year
+  data$DiffMeanHourlyPercent <- as.numeric(data$DiffMeanHourlyPercent)
+  data$Year <- year(data$DueDate)
+  data_year <- data %>% filter(Year == year)
+  
+  max_val <- ceiling(max(abs(data_year$DiffMeanHourlyPercent), na.rm = TRUE))
+  
+  # Create the plot
+  ggplot(data_year, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
+    geom_bar(data = subset(data_year, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = "orange") +
+    geom_bar(data = subset(data_year, DiffMeanHourlyPercent < 0), stat = "identity", fill = "lightblue") +
+    coord_flip() +
+    scale_y_continuous(labels = function(x) abs(x)) +
+    labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
+         x = "Company Name",
+         y = "Mean Hourly Pay Difference (%)") +
+    theme_minimal() +
+    theme(axis.text.y = element_text(size = 4),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5))
+}
+```
+
+```{r}
+# Test the function for 1 specific year
+plot_marketing_sector_df_2018 <- plot_diverging_bar_chart(marketing_sector_df, 2019, "Marketing")
+ggplotly(plot_marketing_sector_df_2018)
+```
+
+
+```{r}
+# Generate plot by years
+generate_plots_by_year <- function(df, sector_name) {
+  years <- 2018:2022
+  plots <- list()
+  
+  for (year in years) {
+    plots[[as.character(year)]] <- plot_diverging_bar_chart(df, year, sector_name)
+  }
+  
+  return(plots)
+}
+
+```
+
+```{r}
+# Marketing sector
+plots <- generate_plots_by_year(marketing_sector_df, "Marketing")
+
+# Print the plots
+for (year in names(plots)) {
+  print(plots[[year]])
+}
+
+```
+
+```{r}
+# Hotel sector
+plots <- generate_plots_by_year(hotel_sector_df, "Hotel")
+
+# Print the plots
+for (year in names(plots)) {
+  print(plots[[year]])
+}
+```
+```{r}
+# Tech sector
+plots <- generate_plots_by_year(tech_sector_df, "Tech")
+
+# Print the plots
+for (year in names(plots)) {
+  print(plots[[year]])
+}
+```
+
+```{r}
+# Bank sector
+plots <- generate_plots_by_year(bank_sector_df, "Bank")
+
+# Print the plots
+for (year in names(plots)) {
+  print(plots[[year]])
+}
+```
+```{r}
+# Education sector
+plots <- generate_plots_by_year(education_sector_df, "Education")
+
+# Print the plots
+for (year in names(plots)) {
+  print(plots[[year]])
+}
+```
+```{r}
+# Bank sector
+plots <- generate_plots_by_year(med_sector_df)
+
+# Print the plots
+for (year in names(plots)) {
+  print(plots[[year]])
+}
+```
 ## Task 2 (Nguyen)
 
 ## Task 3 (Quan)
+
+## Buid Shiny App
+
+Import the neccessary library to build the Shiny app
+```{r}
+library(shiny)
+library(plotly)
+library(bslib)
+library(bsicons)
+```
+
+Front-end: UI of the Shiny App
+```{r}
+
+ui <- fluidPage(
+  titlePanel("COMP4010 - Project 2"),
+  headerPanel("UK Paygap"),
+  tabsetPanel(
+    tabPanel("Task 1"),
+    mainPanel(
+      plotlyOutput("plot_marketing_sector_df_2018")
+    )
+    
+  )
+  
+)
+
+```
+
+Back-end: Server logic of the Shiny App
+```{r}
+server <- function(input, output) {
+  #Add in the graph from the above plot
+  # For instance, bring up the plot on marketing sector in 2018
+  output$plot_marketing_sector_df_2018 <- renderPlotly(ggplotly(plot_marketing_sector_df_2018))
+}
+
+
+```
+
+Run Application
+```{r}
+shinyApp(ui = ui, server = server)
+```
