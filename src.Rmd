@@ -165,7 +165,7 @@ plots <- generate_plots_by_year(marketing_sector_df, "Marketing")
 
 # Print the plots
 for (year in names(plots)) {
-  print(plots[[year]])
+  print(ggplotly(plots[[year]]))
 }
 
 ```
@@ -198,6 +198,7 @@ for (year in names(plots)) {
   print(plots[[year]])
 }
 ```
+
 ```{r}
 # Education sector
 plots <- generate_plots_by_year(education_sector_df, "Education")
@@ -220,15 +221,190 @@ for (year in names(plots)) {
 
 ## Task 3 (Quan)
 
+## Remade Task 1
+```{r}
+# Create a function to plot diverging bar chart for a specific year
+plot_diverging_bar_chart <- function(data, year, sector_name) {
+  #Filter by year
+  data$DiffMeanHourlyPercent <- as.numeric(data$DiffMeanHourlyPercent)
+  data$Year <- year(data$DueDate)
+  data_year <- data %>% filter(Year == year)
+  
+  max_val <- ceiling(max(abs(data_year$DiffMeanHourlyPercent), na.rm = TRUE))
+  
+  # Create the plot
+  ggplot(data_year, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
+    geom_bar(data = subset(data_year, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = "orange") +
+    geom_bar(data = subset(data_year, DiffMeanHourlyPercent < 0), stat = "identity", fill = "lightblue") +
+    coord_flip() +
+    scale_y_continuous(labels = function(x) abs(x)) +
+    labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
+         x = "Company Name",
+         y = "Mean Hourly Pay Difference (%)") +
+    theme_minimal() +
+    theme(axis.text.y = element_text(size = 4),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5))
+}
+```
+
+```{r}
+# Generate plot by years
+generate_plots_by_year <- function(df, sector_name) {
+  years <- 2018:2022
+  plots <- list()
+  
+  for (year in years) {
+    plots[[as.character(year)]] <- plot_diverging_bar_chart(df, year, sector_name)
+  }
+  
+  return(plots)
+}
+
+```
+
+```{r}
+# Marketing sector
+plots <- generate_plots_by_year(marketing_sector_df, "Marketing")
+
+# Print the plots
+for (year in names(plots)) {
+  print(ggplotly(plots[[year]]))
+}
+
+```
+
+
+
+
+
+
 ## Buid Shiny App
 
-Import the neccessary library to build the Shiny app
 ```{r}
-library(shiny)
-library(plotly)
-library(bslib)
-library(bsicons)
+paygap <- paygap %>%
+  mutate(Year = year(ymd_hms(DueDate)))  # Convert DueDate to Year
 ```
+
+```{r}
+plot_gender_distribution <- function(df) {
+  df %>%
+    gather(key = "Quartile", value = "Percentage", MaleLowerQuartile:FemaleTopQuartile) %>%
+    separate(Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
+    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))) %>%
+    ggplot(aes(x = Quartile, y = Percentage, fill = Gender)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = "Gender Pay Gap Distribution",
+         x = "Income Quartile",
+         y = "Percentage of Population",
+         fill = "Gender") +
+    theme_minimal()
+}
+```
+
+```{r}
+plot_diverging_bar_chart <- function(data, year, sector_name) {
+  # Filter by year
+  data <- data %>%
+    mutate(DiffMeanHourlyPercent = as.numeric(DiffMeanHourlyPercent),
+           Year = year(DueDate)) %>%
+    filter(Year == year)
+  
+  max_val <- ceiling(max(abs(data$DiffMeanHourlyPercent), na.rm = TRUE))
+  
+  # Create the plot
+  p <- ggplot(data, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = "orange") +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = "lightblue") +
+    coord_flip() +
+    scale_y_continuous(labels = function(x) abs(x)) +
+    labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
+         x = "Company Name",
+         y = "Mean Hourly Pay Difference (%)") +
+    theme_minimal() +
+    theme(axis.text.y = element_text(size = 4),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5))
+  
+  return(p)
+}
+
+```
+
+```{r}
+# List of keywords for different sectors
+sectors_keywords <- list(
+  tech = c("Tech", "IT"),
+  finance = c("Financial", "Finance", "Insurance"),
+  education = c("Education", "School"),
+  healthcare = c("Medical", "Pharmaceutical", "Health"),
+  retail = c("Retail"),
+  entertainment = c("Entertainment", "Art", "Recreation"),
+  travel = c("Travel"),
+  consulting = c("Consulting"),
+  banking = c("Bank"),
+  marketing = c("Marketing")
+)
+
+# Dictionary to hold data frames for each sector
+sector_data_frames <- map(sectors_keywords, filter_by_keyword, df = paygap)
+
+```
+
+
+```{r}
+# Define UI
+ui <- fluidPage(
+  titlePanel("Gender Pay Gap Visualization"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("sector", "Choose a Sector:", choices = c("Tech", "Financial", "Education", "Healthcare", "Retail", "Marketing")),
+      selectInput("year", "Select Year:", choices = unique(paygap$Year)),
+      actionButton("go", "Generate Graph")
+    ),
+    mainPanel(
+      plotOutput("incomeDistPlot"), 
+      plotOutput("divergingBarPlot")
+    )
+  )
+)
+
+```
+
+```{r}
+# Define server logic
+server <- function(input, output) {
+  data_filtered <- reactive({
+    req(input$go)  # This makes sure the code waits for the user to click 'Generate Graph'
+    sector_data <- paygap %>% 
+      filter(str_detect(EmployerName, regex(input$sector, ignore_case = TRUE)) & Year == as.numeric(input$year))
+    return(sector_data)
+  })
+  
+  output$incomeDistPlot <- renderPlot({
+    req(data_filtered())  # Ensure there is data to plot
+    plot_gender_distribution(data_filtered())
+  })
+  
+  output$divergingBarPlot <- renderPlot({
+    req(data_filtered())
+    plot_diverging_bar_chart(data_filtered(), input$year, input$sector)
+  })
+}
+```
+
+```{r}
+shinyApp(ui = ui, server = server)
+```
+
+
+
+
+
+
+====My ShinyApp====
 
 Front-end: UI of the Shiny App
 ```{r}
