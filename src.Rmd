@@ -15,12 +15,17 @@ library(vroom)
 library(fs)
 library(readr)
 library(dplyr)
+library(lubridate)
 ```
 
 After processing, cleaned data would be used
 ```{r}
 paygap <- read_csv('data/cleaned/paygaps_2018_2022.csv')
 companies <- read_csv('data/cleaned/companies.csv')
+
+# Convert 'DueDate' to date format and extract the year
+paygap <- paygap %>%
+  mutate(Year = year(ymd_hms(DueDate)))  # Convert DueDate to Year
 ```
 Filtered by sector
 ```{r}
@@ -103,3 +108,55 @@ retail_sector_df <- filter_by_keyword(paygap, keywords_retail_sector)
 ## Task 2 (Nguyen)
 
 ## Task 3 (Quan)
+
+```{r}
+view(tech_sector_df)
+```
+
+```{r}
+
+# List of keywords for different sectors
+sectors_keywords <- list(
+  #tech = c("Tech", "IT"),
+  finance = c("Financial", "Finance", "Insurance"),
+  education = c("Education", "School"),
+  healthcare = c("Medical", "Pharmaceutical", "Health"),
+  retail = c("Retail"),
+  entertainment = c("Entertainment", "Art", "Recreation"),
+  travel = c("Travel"),
+  consulting = c("Consulting"),
+  banking = c("Bank"),
+  marketing = c("Marketing")
+)
+
+# Dictionary to hold data frames for each sector
+sector_data_frames <- map(sectors_keywords, filter_by_keyword, df = paygap)
+```
+
+```{r}
+# Function to plot gender distribution by income quartile for a given sector and year
+plot_gender_distribution_by_year <- function(df, sector_name) {
+  years <- unique(df$Year)
+  plots <- map(years, function(year) {
+    df_year <- df %>% filter(Year == year)
+    df_year %>%
+      gather(key = "Quartile", value = "Percentage", MaleLowerQuartile:FemaleTopQuartile) %>%
+      separate(Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
+      mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))) %>%
+      ggplot(aes(x = Quartile, y = Percentage, fill = Gender)) +
+      geom_bar(stat = "identity", position = "dodge") +
+      labs(title = paste("Distribution in", sector_name, "Sector in", year, "Across Income Groups by Gender"),
+           x = "Income Quartile",
+           y = "Percentage of Population",
+           fill = "Gender") +
+      theme_minimal()
+  })
+  return(plots)
+}
+
+# Generate and print plots for each sector and year
+all_plots <- map2(sector_data_frames, names(sector_data_frames), ~ plot_gender_distribution_by_year(.x, .y))
+walk(all_plots, function(sector_plots) {
+  walk(sector_plots, print)
+})
+```
