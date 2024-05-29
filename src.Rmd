@@ -27,6 +27,12 @@ After processing, cleaned data would be used
 paygap <- read_csv('data/cleaned/paygaps_2018_2022.csv')
 companies <- read_csv('data/cleaned/companies.csv')
 ```
+Extract the Year from DueDate
+```{r}
+paygap <- paygap %>%
+  mutate(Year = year(ymd_hms(DueDate)))  
+```
+
 Filtered by sector
 ```{r}
 # Function to filter sector by keyword
@@ -38,271 +44,27 @@ filter_by_keyword <- function(df, keywords) {
 ```
 
 ```{r}
-# Test on the Technology sector
-keywords_tech_sector <- c("Tech", "IT") 
-tech_sector_df <- filter_by_keyword(paygap, keywords_tech_sector)
+# List of keywords for different sectors
+sectors_keywords <- list(
+  Tech = c("Tech", "IT"),
+  Finance = c("Financial", "Finance", "Insurance"),
+  Education = c("Education", "School"),
+  Healthcare = c("Medical", "Pharmaceutical", "Health"),
+  Retail = c("Retail"),
+  Entertainment = c("Entertainment", "Art", "Recreation"),
+  Travel = c("Travel"),
+  Consulting = c("Consulting"),
+  Banking = c("Bank"),
+  Marketing = c("Marketing")
+)
+
+# Dictionary to hold data frames for each sector
+sector_data_frames <- map(sectors_keywords, filter_by_keyword, df = paygap)
+
 ```
 
-```{r}
-keywords_financial_sector <- c("Financial", "Finance", "Insurance")
-financial_sector_df <- filter_by_keyword(paygap, keywords_financial_sector)
-```
-
-```{r}
-keywords_bank_sector <- c("Bank")
-bank_sector_df <- filter_by_keyword(paygap, keywords_bank_sector)
-```
-
-```{r}
-keywords_med_sector <- c("Medical", "Pharmaceutical", "Health")
-med_sector_df <- filter_by_keyword(paygap, keywords_med_sector)
-```
-
-```{r}
-keywords_hotel_sector <- c("Hotel")
-hotel_sector_df <- filter_by_keyword(paygap, keywords_hotel_sector)
-```
-
-```{r}
-keywords_marketing_sector <- c("Marketing")
-marketing_sector_df <- filter_by_keyword(paygap, keywords_marketing_sector)
-```
-
-```{r}
-keywords_education_sector <- c("Education", "School")
-education_sector_df <- filter_by_keyword(paygap, keywords_education_sector)
-```
-
-```{r}
-keywords_consulting_sector <- c("Consulting")
-consulting_sector_df <- filter_by_keyword(paygap, keywords_consulting_sector)
-```
-
-```{r}
-keywords_travel_sector <- c("Travel")
-travel_sector_df <- filter_by_keyword(paygap, keywords_travel_sector)
-```
-
-```{r}
-keywords_accounting_sector <- c("Accounting")
-accounting_sector_df <- filter_by_keyword(paygap, keywords_accounting_sector)
-```
-
-```{r}
-keywords_airline_sector <- c("Airline")
-airline_sector_df <- filter_by_keyword(paygap, keywords_airline_sector)
-```
-
-```{r}
-keywords_entertainment_sector <- c("Entertainment", "Art", "Recreation")
-entertainment_sector_df <- filter_by_keyword(paygap, keywords_entertainment_sector)
-```
-
-```{r}
-keywords_retail_sector <- c("Retail")
-retail_sector_df <- filter_by_keyword(paygap, keywords_retail_sector)
-```
 
 ## Task 1 (Kiet)
-```{r}
-marketing_sector_df$DiffMeanHourlyPercent <- as.numeric(marketing_sector_df$DiffMeanHourlyPercent)
-marketing_sector_df$Year <- year(marketing_sector_df$DueDate)
-
-```
-
-```{r}
-# Create a function to plot diverging bar chart for a specific year
-plot_diverging_bar_chart <- function(data, year, sector_name) {
-  #Filter by year
-  data$DiffMeanHourlyPercent <- as.numeric(data$DiffMeanHourlyPercent)
-  data$Year <- year(data$DueDate)
-  data_year <- data %>% filter(Year == year)
-  
-  max_val <- ceiling(max(abs(data_year$DiffMeanHourlyPercent), na.rm = TRUE))
-  
-  # Create the plot
-  ggplot(data_year, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
-    geom_bar(data = subset(data_year, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = "orange") +
-    geom_bar(data = subset(data_year, DiffMeanHourlyPercent < 0), stat = "identity", fill = "lightblue") +
-    coord_flip() +
-    scale_y_continuous(labels = function(x) abs(x)) +
-    labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
-         x = "Company Name",
-         y = "Mean Hourly Pay Difference (%)") +
-    theme_minimal() +
-    theme(axis.text.y = element_text(size = 4),
-          panel.grid.major.y = element_blank(),
-          panel.grid.minor.y = element_blank(),
-          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5))
-}
-```
-
-```{r}
-# Test the function for 1 specific year
-plot_marketing_sector_df_2018 <- plot_diverging_bar_chart(marketing_sector_df, 2019, "Marketing")
-ggplotly(plot_marketing_sector_df_2018)
-```
-
-
-```{r}
-# Generate plot by years
-generate_plots_by_year <- function(df, sector_name) {
-  years <- 2018:2022
-  plots <- list()
-  
-  for (year in years) {
-    plots[[as.character(year)]] <- plot_diverging_bar_chart(df, year, sector_name)
-  }
-  
-  return(plots)
-}
-
-```
-
-```{r}
-# Marketing sector
-plots <- generate_plots_by_year(marketing_sector_df, "Marketing")
-
-# Print the plots
-for (year in names(plots)) {
-  print(ggplotly(plots[[year]]))
-}
-
-```
-
-```{r}
-# Hotel sector
-plots <- generate_plots_by_year(hotel_sector_df, "Hotel")
-
-# Print the plots
-for (year in names(plots)) {
-  print(plots[[year]])
-}
-```
-```{r}
-# Tech sector
-plots <- generate_plots_by_year(tech_sector_df, "Tech")
-
-# Print the plots
-for (year in names(plots)) {
-  print(plots[[year]])
-}
-```
-
-```{r}
-# Bank sector
-plots <- generate_plots_by_year(bank_sector_df, "Bank")
-
-# Print the plots
-for (year in names(plots)) {
-  print(plots[[year]])
-}
-```
-
-```{r}
-# Education sector
-plots <- generate_plots_by_year(education_sector_df, "Education")
-
-# Print the plots
-for (year in names(plots)) {
-  print(plots[[year]])
-}
-```
-```{r}
-# Bank sector
-plots <- generate_plots_by_year(med_sector_df)
-
-# Print the plots
-for (year in names(plots)) {
-  print(plots[[year]])
-}
-```
-## Task 2 (Nguyen)
-
-## Task 3 (Quan)
-
-## Remade Task 1
-```{r}
-# Create a function to plot diverging bar chart for a specific year
-plot_diverging_bar_chart <- function(data, year, sector_name) {
-  #Filter by year
-  data$DiffMeanHourlyPercent <- as.numeric(data$DiffMeanHourlyPercent)
-  data$Year <- year(data$DueDate)
-  data_year <- data %>% filter(Year == year)
-  
-  max_val <- ceiling(max(abs(data_year$DiffMeanHourlyPercent), na.rm = TRUE))
-  
-  # Create the plot
-  ggplot(data_year, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
-    geom_bar(data = subset(data_year, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = "orange") +
-    geom_bar(data = subset(data_year, DiffMeanHourlyPercent < 0), stat = "identity", fill = "lightblue") +
-    coord_flip() +
-    scale_y_continuous(labels = function(x) abs(x)) +
-    labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
-         x = "Company Name",
-         y = "Mean Hourly Pay Difference (%)") +
-    theme_minimal() +
-    theme(axis.text.y = element_text(size = 4),
-          panel.grid.major.y = element_blank(),
-          panel.grid.minor.y = element_blank(),
-          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5))
-}
-```
-
-```{r}
-# Generate plot by years
-generate_plots_by_year <- function(df, sector_name) {
-  years <- 2018:2022
-  plots <- list()
-  
-  for (year in years) {
-    plots[[as.character(year)]] <- plot_diverging_bar_chart(df, year, sector_name)
-  }
-  
-  return(plots)
-}
-
-```
-
-```{r}
-# Marketing sector
-plots <- generate_plots_by_year(marketing_sector_df, "Marketing")
-
-# Print the plots
-for (year in names(plots)) {
-  print(ggplotly(plots[[year]]))
-}
-
-```
-
-
-
-
-
-
-## Buid Shiny App
-
-```{r}
-paygap <- paygap %>%
-  mutate(Year = year(ymd_hms(DueDate)))  # Convert DueDate to Year
-```
-
-```{r}
-plot_gender_distribution <- function(df) {
-  df %>%
-    gather(key = "Quartile", value = "Percentage", MaleLowerQuartile:FemaleTopQuartile) %>%
-    separate(Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
-    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))) %>%
-    ggplot(aes(x = Quartile, y = Percentage, fill = Gender)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    labs(title = "Gender Pay Gap Distribution",
-         x = "Income Quartile",
-         y = "Percentage of Population",
-         fill = "Gender") +
-    theme_minimal()
-}
-```
-
 ```{r}
 plot_diverging_bar_chart <- function(data, year, sector_name) {
   # Filter by year
@@ -333,34 +95,34 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
 
 ```
 
+## Task 2 (Nguyen)
+
+## Task 3 (Quan)
 ```{r}
-# List of keywords for different sectors
-sectors_keywords <- list(
-  tech = c("Tech", "IT"),
-  finance = c("Financial", "Finance", "Insurance"),
-  education = c("Education", "School"),
-  healthcare = c("Medical", "Pharmaceutical", "Health"),
-  retail = c("Retail"),
-  entertainment = c("Entertainment", "Art", "Recreation"),
-  travel = c("Travel"),
-  consulting = c("Consulting"),
-  banking = c("Bank"),
-  marketing = c("Marketing")
-)
-
-# Dictionary to hold data frames for each sector
-sector_data_frames <- map(sectors_keywords, filter_by_keyword, df = paygap)
-
+plot_gender_distribution <- function(df) {
+  df %>%
+    gather(key = "Quartile", value = "Percentage", MaleLowerQuartile:FemaleTopQuartile) %>%
+    separate(Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
+    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))) %>%
+    ggplot(aes(x = Quartile, y = Percentage, fill = Gender)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = "Gender Pay Gap Distribution",
+         x = "Income Quartile",
+         y = "Percentage of Population",
+         fill = "Gender") +
+    theme_minimal()
+}
 ```
 
 
+## Buid Shiny App
 ```{r}
 # Define UI
 ui <- fluidPage(
   titlePanel("Gender Pay Gap Visualization"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("sector", "Choose a Sector:", choices = c("Tech", "Financial", "Education", "Healthcare", "Retail", "Marketing")),
+      selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE),
       selectInput("year", "Select Year:", choices = unique(paygap$Year)),
       actionButton("go", "Generate Graph")
     ),
@@ -378,9 +140,21 @@ ui <- fluidPage(
 server <- function(input, output) {
   data_filtered <- reactive({
     req(input$go)  # This makes sure the code waits for the user to click 'Generate Graph'
-    sector_data <- paygap %>% 
-      filter(str_detect(EmployerName, regex(input$sector, ignore_case = TRUE)) & Year == as.numeric(input$year))
-    return(sector_data)
+    selected_sectors <- input$sector
+    year_selected <- as.numeric(input$year)
+  
+   # sector_data <- paygap %>% 
+   #   filter(str_detect(EmployerName, regex(input$sector, ignore_case = TRUE)) & Year == as.numeric(input$year))
+    
+   # return(sector_data)
+    
+    # Combine data from all selected sectors
+    combined_data <- do.call(rbind, lapply(selected_sectors, function(sector) {
+      sector_data_frames[[sector]] %>% filter(Year == year_selected)
+    }))
+    
+    return(combined_data)
+    
   })
   
   output$incomeDistPlot <- renderPlot({
@@ -404,38 +178,3 @@ shinyApp(ui = ui, server = server)
 
 
 
-====My ShinyApp====
-
-Front-end: UI of the Shiny App
-```{r}
-
-ui <- fluidPage(
-  titlePanel("COMP4010 - Project 2"),
-  headerPanel("UK Paygap"),
-  tabsetPanel(
-    tabPanel("Task 1"),
-    mainPanel(
-      plotlyOutput("plot_marketing_sector_df_2018")
-    )
-    
-  )
-  
-)
-
-```
-
-Back-end: Server logic of the Shiny App
-```{r}
-server <- function(input, output) {
-  #Add in the graph from the above plot
-  # For instance, bring up the plot on marketing sector in 2018
-  output$plot_marketing_sector_df_2018 <- renderPlotly(ggplotly(plot_marketing_sector_df_2018))
-}
-
-
-```
-
-Run Application
-```{r}
-shinyApp(ui = ui, server = server)
-```
