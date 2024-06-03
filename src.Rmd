@@ -19,6 +19,7 @@ library(plotly)
 library(shiny)
 library(bslib)
 library(bsicons)
+library(showtext)
 
 ```
 
@@ -63,6 +64,38 @@ sector_data_frames <- map(sectors_keywords, filter_by_keyword, df = paygap)
 
 ```
 
+Create a theme
+```{r}
+font_add_google("DM Sans", "DM Sans")
+showtext_auto()
+main_font = "DM Sans"
+```
+
+```{r}
+theme_general <- function() {
+  theme_minimal(
+    base_family = main_font,
+    base_size = 11,
+    base_line_size = 11/22,
+    base_rect_size = 11/22
+  ) + 
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    panel.grid.major.y = element_line(color = "grey80"),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_line(color = "grey80"),
+    panel.grid.minor.x = element_blank(),
+    axis.title.x = element_text(size = 12, hjust = 0.5, face = "bold"),
+    axis.title.y = element_text(size = 12, hjust = 0.5, face = "bold"),
+    legend.title = element_text(face = "bold")
+  )
+}
+```
+
+Color pallete
+```{r}
+pal <- c('#00202e', '#003f5c', '#2c4875', '#8a508f', '#bc5090', '#ff6361', '#ff8531', '#ffa600', '#ffd380','#35A29F')
+```
 
 ## Task 1 (Kiet)
 ```{r}
@@ -77,18 +110,20 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
   
   # Create the plot
   p <- ggplot(data, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
-    geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = "orange") +
-    geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = "lightblue") +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = pal[8]) +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = pal[2]) +
     coord_flip() +
     scale_y_continuous(labels = function(x) abs(x)) +
     labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
          x = "Company Name",
          y = "Mean Hourly Pay Difference (%)") +
     theme_minimal() +
+    theme_general() +
     theme(axis.text.y = element_text(size = 4),
           panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_blank(),
-          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5))
+          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5)) 
+  
   
   return(p)
 }
@@ -110,7 +145,9 @@ plot_gender_distribution <- function(df) {
          x = "Income Quartile",
          y = "Percentage of Population",
          fill = "Gender") +
-    theme_minimal()
+    scale_fill_manual(values = c(Male = pal[8], Female = pal[2])) +
+    theme_minimal() +
+    theme_general()
 }
 ```
 
