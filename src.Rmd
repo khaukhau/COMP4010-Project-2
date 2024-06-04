@@ -277,6 +277,16 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
         )
       )
     ),
+    tabPanel("Overall Analysis",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE)
+        ),
+        mainPanel(
+          plotOutput("dumbbellChart")
+        )
+      )
+    ),
     tabPanel("Analysis",
       sidebarLayout(
         sidebarPanel(
@@ -284,13 +294,8 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
           selectInput("year", "Select Year:", choices = unique(paygap$Year))
         ),
         mainPanel(
-          tabsetPanel(
-            tabPanel("Dumbbell Chart", plotOutput("dumbbellChart")),
-            tabPanel("Sector Analysis",
-              plotOutput("incomeDistPlot"), 
-              plotOutput("divergingBarPlot")
-            )
-          )
+          plotOutput("incomeDistPlot"), 
+          plotOutput("divergingBarPlot")
         )
       )
     ),
@@ -328,14 +333,28 @@ server <- function(input, output, session) {
   })
 
   data_filtered <- reactive({
-    sector_data <- sector_data_frames[[input$sector]] %>% 
-                   filter(Year == as.numeric(input$year))
-    return(sector_data)
+    selected_sectors <- input$sector
+    year_selected <- as.numeric(input$year)
+  
+   # sector_data <- paygap %>% 
+   #   filter(str_detect(EmployerName, regex(input$sector, ignore_case = TRUE)) & Year == as.numeric(input$year))
+    
+   # return(sector_data)
+    
+    # Combine data from all selected sectors
+    combined_data <- do.call(rbind, lapply(selected_sectors, function(sector) {
+      sector_data_frames[[sector]] %>% filter(Year == year_selected)
+    }))
+    
+    return(combined_data)
+    
   })
   
   output$dumbbellChart <- renderPlot({
-    req(data_filtered())
-    plot_dumbbell_chart(data_filtered())
+    req(sector_data_frames[[input$sector]])
+    plot_dumbbell_chart(sector_data_frames[[input$sector]])
+    #req(data_filtered())
+    #plot_dumbbell_chart(data_filtered())
   })
     
   output$incomeDistPlot <- renderPlot({
