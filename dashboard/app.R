@@ -233,7 +233,7 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                         p("Favorite Food: ")
                  ),
                  column(4,
-                        img(src = "member3.jpg", height = "100px", style = "border-radius: 50%;"),
+                        img(src = "member3.jpg", height = "100px", style = "border-radius: 80%;"),
                         h4("Nguyen Duy Anh Quan"),
                         p("Email: 20quan.nda@vinuni.edu.vn"),
                         p("Favorite Food: Ramen")
