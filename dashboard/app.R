@@ -217,7 +217,11 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                ),
                mainPanel(
                  plotOutput("incomeDistPlot"), 
-                 plotOutput("divergingBarPlot")
+                 plotOutput("divergingBarPlot"),
+                 p(HTML("The <b>diverging bar chart</b> represents the difference in pay gap with respect to gender for <b>various companies</b>. The <b>blue bars</b> 
+                 extending to the right indicate companies where <b>male employees</b> have higher mean hourly pay, 
+                 while the <b>pink bars</b> extending to the left indicate companies where <b>female employees</b> earn more. 
+                  The length of each bar represents the magnitude of the pay difference."))
                )
              )
     ),
