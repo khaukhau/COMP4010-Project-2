@@ -1,0 +1,12 @@
+name: dashboard
+title: dashboard
+username: paygapuk
+account: paygapuk
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12124786
+bundleId: 8700703
+url: https://paygapuk.shinyapps.io/dashboard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

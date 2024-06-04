@@ -5,7 +5,6 @@ date: "2024-05-06"
 ---
 
 ## Preparing task
-
 Library import
 ```{r}
 library(tidyverse)
@@ -15,6 +14,13 @@ library(vroom)
 library(fs)
 library(readr)
 library(dplyr)
+library(plotly)
+#install.packages("plotly")
+library(shiny)
+library(bslib)
+library(bsicons)
+library(showtext)
+
 ```
 
 After processing, cleaned data would be used
@@ -22,6 +28,12 @@ After processing, cleaned data would be used
 paygap <- read_csv('data/cleaned/paygaps_2018_2022.csv')
 companies <- read_csv('data/cleaned/companies.csv')
 ```
+Extract the Year from DueDate
+```{r}
+paygap <- paygap %>%
+  mutate(Year = year(ymd_hms(DueDate)))  
+```
+
 Filtered by sector
 ```{r}
 # Function to filter sector by keyword
@@ -33,73 +45,315 @@ filter_by_keyword <- function(df, keywords) {
 ```
 
 ```{r}
-# Test on the Technology sector
-keywords_tech_sector <- c("Tech", "IT") 
-tech_sector_df <- filter_by_keyword(paygap, keywords_tech_sector)
+# List of keywords for different sectors
+sectors_keywords <- list(
+  Tech = c("Tech", "IT"),
+  Finance = c("Financial", "Finance", "Insurance"),
+  Education = c("Education", "School"),
+  Healthcare = c("Medical", "Pharmaceutical", "Health"),
+  Retail = c("Retail"),
+  Entertainment = c("Entertainment", "Art", "Recreation"),
+  Travel = c("Travel"),
+  Consulting = c("Consulting"),
+  Banking = c("Bank"),
+  Marketing = c("Marketing")
+)
+
+# Dictionary to hold data frames for each sector
+sector_data_frames <- map(sectors_keywords, filter_by_keyword, df = paygap)
+
+```
+
+Create a theme
+```{r}
+font_add_google("DM Sans", "DM Sans")
+showtext_auto()
+main_font = "DM Sans"
 ```
 
 ```{r}
-keywords_financial_sector <- c("Financial", "Finance", "Insurance")
-financial_sector_df <- filter_by_keyword(paygap, keywords_financial_sector)
+theme_general <- function() {
+  theme_minimal(
+    base_family = main_font,
+    base_size = 11,
+    base_line_size = 11/22,
+    base_rect_size = 11/22
+  ) + 
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    panel.grid.major.y = element_line(color = "grey80"),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_line(color = "grey80"),
+    panel.grid.minor.x = element_blank(),
+    axis.title.x = element_text(size = 12, hjust = 0.5, face = "bold"),
+    axis.title.y = element_text(size = 12, hjust = 0.5, face = "bold"),
+    legend.title = element_text(face = "bold")
+  )
+}
 ```
 
+Color pallete
 ```{r}
-keywords_bank_sector <- c("Bank")
-bank_sector_df <- filter_by_keyword(paygap, keywords_bank_sector)
-```
-
-```{r}
-keywords_med_sector <- c("Medical", "Pharmaceutical", "Health")
-med_sector_df <- filter_by_keyword(paygap, keywords_med_sector)
-```
-
-```{r}
-keywords_hotel_sector <- c("Hotel")
-hotel_sector_df <- filter_by_keyword(paygap, keywords_hotel_sector)
-```
-
-```{r}
-keywords_marketing_sector <- c("Marketing")
-marketing_sector_df <- filter_by_keyword(paygap, keywords_marketing_sector)
-```
-
-```{r}
-keywords_education_sector <- c("Education", "School")
-education_sector_df <- filter_by_keyword(paygap, keywords_education_sector)
-```
-
-```{r}
-keywords_consulting_sector <- c("Consulting")
-consulting_sector_df <- filter_by_keyword(paygap, keywords_consulting_sector)
-```
-
-```{r}
-keywords_travel_sector <- c("Travel")
-travel_sector_df <- filter_by_keyword(paygap, keywords_travel_sector)
-```
-
-```{r}
-keywords_accounting_sector <- c("Accounting")
-accounting_sector_df <- filter_by_keyword(paygap, keywords_accounting_sector)
-```
-
-```{r}
-keywords_airline_sector <- c("Airline")
-airline_sector_df <- filter_by_keyword(paygap, keywords_airline_sector)
-```
-
-```{r}
-keywords_entertainment_sector <- c("Entertainment", "Art", "Recreation")
-entertainment_sector_df <- filter_by_keyword(paygap, keywords_entertainment_sector)
-```
-
-```{r}
-keywords_retail_sector <- c("Retail")
-retail_sector_df <- filter_by_keyword(paygap, keywords_retail_sector)
+pal <- c('#00202e', '#003f5c', '#2c4875', '#8a508f', '#bc5090', '#ff6361', '#ff8531', '#ffa600', '#ffd380','#35A29F', '#6ca0dc', '#ffc2d1')
 ```
 
 ## Task 1 (Kiet)
+```{r}
+plot_diverging_bar_chart <- function(data, year, sector_name) {
+  # Filter by year
+  data <- data %>%
+    mutate(DiffMeanHourlyPercent = as.numeric(DiffMeanHourlyPercent),
+           Year = lubridate::year(DueDate)) %>%
+    filter(Year == year)
+  
+  max_val <- ceiling(max(abs(data$DiffMeanHourlyPercent), na.rm = TRUE))
+  
+  # Create the plot
+  p <- ggplot(data, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent, 
+                        text = paste(CurrentName, 
+                                     "<br>", sprintf("%.2f%%", DiffMeanHourlyPercent)))) +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = pal[11]) +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = pal[12]) +
+    coord_flip() +
+    scale_y_continuous(labels = function(x) abs(x)) +
+    labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
+         x = "Company Name",
+         y = "Mean Hourly Pay Difference (%)") +
+    theme_minimal()+
+    theme_general() +
+    theme(axis.text.y = element_text(size = 4),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "lightgrey", size = 0.5)) 
+  
+  ggplotly(p, tooltip = "text")
+}
+
+#plot <- plot_diverging_bar_chart(sector_data_frames[["Finance"]], 2020, "Finance")
+#plot
+
+
+```
 
 ## Task 2 (Nguyen)
+```{r}
+plot_dumbbell_chart <- function(data) {
+  p <- data %>%
+    gather(key = "Gender_Quartile", value = "Percentage", 
+           MaleLowerQuartile:FemaleTopQuartile) %>%
+    separate(Gender_Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
+    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "TopQuartile", "UpperMiddleQuartile"))) %>%
+    group_by(Year, Gender, Quartile) %>%
+    summarize(Percentage = mean(Percentage, na.rm = TRUE), .groups = 'drop') %>%
+    ggplot(aes(x = Year, y = Percentage, group = interaction(Quartile, Year))) +
+    geom_line() +
+    geom_point(aes(color = Gender, text = paste(sprintf("%.2f%%", Percentage))), size = 3) +
+    facet_wrap(~Quartile, scales = "free_y") +
+    scale_color_manual(values = c("Male" = pal[11], "Female" = pal[12])) +
+    labs(title = "Yearly Changes in Quartile Percentages",
+         x = "Year",
+         y = "Average Percentage",
+         color = "Gender") +
+    theme(legend.position = "bottom") +
+    theme_general() +
+    coord_flip()
+
+  ggplotly(p, tooltip = "text")
+}
+
+#plot <- plot_dumbbell_chart(paygap)
+#plot
+
+```
 
 ## Task 3 (Quan)
+```{r}
+plot_gender_distribution <- function(df) {
+  # Define the specific columns and their pairings
+  selected_columns <- c("MaleLowerQuartile", "FemaleLowerQuartile", 
+                        "MaleLowerMiddleQuartile", "FemaleLowerMiddleQuartile", 
+                        "MaleUpperMiddleQuartile", "FemaleUpperMiddleQuartile", 
+                        "MaleTopQuartile", "FemaleTopQuartile")
+  
+  # Create a factor with levels for ordering in the plot
+  pairs <- factor(c("LowerQuartile", "LowerQuartile", 
+                    "LowerMiddleQuartile", "LowerMiddleQuartile", 
+                    "UpperMiddleQuartile", "UpperMiddleQuartile", 
+                    "TopQuartile", "TopQuartile"),
+                  levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))
+  
+  # Subset the dataframe to include only selected columns
+  df_subset <- select(df, all_of(selected_columns))
+  
+  # Calculate averages of each selected column
+  averages <- colMeans(df_subset, na.rm = TRUE)  # Ensuring NA values are ignored
+  
+  # Convert averages to a dataframe and create a simpler gender identifier
+  average_df <- data.frame(
+    Column = names(averages),
+    Average = as.vector(averages),
+    Quartile = pairs,
+    Gender = ifelse(grepl("Male", names(averages)), "Male", "Female")
+  )
+  
+  # Define colors for each gender
+  colors <- c("Male" = pal[11], "Female" = pal[12])
+  
+  # Plotting using ggplot2
+  p <- ggplot(average_df, aes(x = Quartile, y = Average, fill = Gender,
+                              text = paste(
+                                           sprintf("%.2f%%", Average)))) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+    scale_fill_manual(values = colors, name = "Gender",
+                      labels = c("Female", "Male")) +
+    labs(title = "Average Percentage by Gender Across Quartiles",
+         x = "Quartile",
+         y = "Average Percentage") +
+    theme_general()  # Assuming theme_general is a custom theme; replace if necessary
+
+  ggplotly(p, tooltip = "text")
+}
+
+#plot <- plot_gender_distribution(sector_data_frames[["Finance"]])
+#plot
+
+```
+
+
+## Buid Shiny App
+
+```{r}
+
+ui <- fluidPage(
+    # Header with Logo and Title
+  div(
+    style = "margin-bottom: 20px;",
+    img(src = "data/uni_logo.png", height = "50px", width = "50px", style = "float: left; margin-right: 10px;"),
+    h1("Gender Pay Gap Visualization", style = "position: relative; top: 10px;")
+  ),
+  
+  # Main tabset panel for navigation
+  tabsetPanel(
+    id = "main_tabs",
+    tabPanel("Introduction", 
+      fluidRow(
+        column(12, 
+          h1("Welcome to the Gender Pay Gap Visualization"),
+          h2("Our Goal"),
+          p("Despite advancements in workplace equality, wage disparities between genders remain a significant challenge across various sectors.
+We want to explore the gender pay gaps in the UK using the UK Pay Gap data to develop an interactive dashboard that illustrates wage disparities across industries and over time, enhancing understanding of pay inequality causes.
+"),
+          p(HTML("<b>Objective:</b> Build an <b>interactive dashboard</b> visualizing the gender pay gap in various sectors like technology, finance, education, and healthcare, showing both current disparities and historical trends.")),
+          p(HTML("<b>Approach:</b> Utilize the <b>Shiny framework</b> to make complex data accessible and engaging, with interactive charts and graphs for sector comparisons and temporal analysis.
+")),
+          p(HTML("<b>Impact:</b> Increase awareness and understanding of sector-specific pay gaps in the UK economy.
+")),
+          p(HTML("<b>Innovation:</b> Use interactive elements to deepen user engagement and comprehension of how pay disparities vary across industries.
+")),
+          actionButton("continue", "Continue")
+        )
+      )
+    ),
+    tabPanel("Overall Analysis",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE)
+        ),
+        mainPanel(
+          plotlyOutput("dumbbellChart")
+        )
+      )
+    ),
+    tabPanel("Analysis",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE),
+          selectInput("year", "Select Year:", choices = unique(paygap$Year))
+        ),
+        mainPanel(
+          plotlyOutput("incomeDistPlot"), 
+          plotlyOutput("divergingBarPlot")
+        )
+      )
+    ),
+    tabPanel("Team",
+      div(
+        h3("Meet Our Team"),
+        fluidRow(
+          column(4,
+            img(src = "data/member1.jpg", height = "100px", style = "border-radius: 50%;"),
+            h4("Khau Lien Kiet"),
+            p("Email: 20kiet.kl@vinuni.edu.vn"),
+            p("Favorite Food:")
+          ),
+          column(4,
+            img(src = "data/member2.jpg", height = "100px", style = "border-radius: 50%;"),
+            h4("Hoang Khoi Nguyen"),
+            p("Email: 20nguyen.hk@vinuni.edu.vn"),
+            p("Favorite Food: ")
+          ),
+          column(4,
+            img(src = "data/member3.jpg", height = "100px", style = "border-radius: 50%;"),
+            h4("Nguyen Duy Anh Quan"),
+            p("Email: 20quan.nda@vinuni.edu.vn"),
+            p("Favorite Food: Ramen")
+          )
+        )
+      )
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$continue, {
+    updateTabsetPanel(session, "main_tabs", selected = "Analysis")
+  })
+
+  data_filtered <- reactive({
+    selected_sectors <- input$sector
+    year_selected <- as.numeric(input$year)
+  
+   # sector_data <- paygap %>% 
+   #   filter(str_detect(EmployerName, regex(input$sector, ignore_case = TRUE)) & Year == as.numeric(input$year))
+    
+   # return(sector_data)
+    
+    # Combine data from all selected sectors
+    combined_data <- do.call(rbind, lapply(selected_sectors, function(sector) {
+      sector_data_frames[[sector]] %>% filter(Year == year_selected)
+    }))
+    
+    return(combined_data)
+    
+  })
+  
+  output$dumbbellChart <- renderPlotly({
+    req(sector_data_frames[[input$sector]])
+    plot_dumbbell_chart(sector_data_frames[[input$sector]])
+    #req(data_filtered())
+    #plot_dumbbell_chart(data_filtered())
+  })
+    
+  output$incomeDistPlot <- renderPlotly({
+    req(data_filtered())
+    plot_gender_distribution(data_filtered())
+  })
+  
+  output$divergingBarPlot <- renderPlotly({
+    req(data_filtered())
+    plot_diverging_bar_chart(data_filtered(), input$year, input$sector)
+  })
+}
+```
+
+
+
+```{r}
+shinyApp(ui = ui, server = server)
+```
+
+
+
+
+
+
