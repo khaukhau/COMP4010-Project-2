@@ -131,6 +131,32 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
 ```
 
 ## Task 2 (Nguyen)
+```{r}
+plot_dumbbell_chart <- function(data) {
+  data %>%
+    gather(key = "Gender_Quartile", value = "Percentage", 
+           MaleLowerQuartile:FemaleTopQuartile) %>%
+    separate(Gender_Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
+    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "TopQuartile", "UpperMiddleQuartile"))) %>%  # Adjust order of appearance
+    group_by(Year, Gender, Quartile) %>%
+    summarize(Percentage = mean(Percentage, na.rm = TRUE), .groups = 'drop') %>%
+    ggplot(aes(x = Year, y = Percentage, group = interaction(Quartile, Year))) +
+    geom_line() +
+    geom_point(aes(color = Gender), size = 3) +
+    facet_wrap(~Quartile, scales = "free_y") +
+    # scale_y_continuous(limits = c(35, 65)) +
+    labs(title = "Yearly Changes in Quartile Percentages",
+         x = "Year",
+         y = "Average Percentage",
+         color = "Gender") +
+    theme_general() +
+    theme(legend.position = "bottom") +
+    coord_flip()
+}
+
+plot <- plot_dumbbell_chart(paygap)
+print(plot)
+```
 
 ## Task 3 (Quan)
 ```{r}
