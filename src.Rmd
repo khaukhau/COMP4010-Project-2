@@ -94,7 +94,7 @@ theme_general <- function() {
 
 Color pallete
 ```{r}
-pal <- c('#00202e', '#003f5c', '#2c4875', '#8a508f', '#bc5090', '#ff6361', '#ff8531', '#ffa600', '#ffd380','#35A29F')
+pal <- c('#00202e', '#003f5c', '#2c4875', '#8a508f', '#bc5090', '#ff6361', '#ff8531', '#ffa600', '#ffd380','#35A29F', '#6ca0dc', '#ffc2d1')
 ```
 
 ## Task 1 (Kiet)
@@ -110,8 +110,8 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
   
   # Create the plot
   p <- ggplot(data, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
-    geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = pal[8]) +
-    geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = pal[2]) +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = pal[11]) +
+    geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = pal[12]) +
     coord_flip() +
     scale_y_continuous(labels = function(x) abs(x)) +
     labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
@@ -171,7 +171,7 @@ plot_gender_distribution <- function(df) {
          x = "Income Quartile",
          y = "Percentage of Population",
          fill = "Gender") +
-    scale_fill_manual(values = c(Male = pal[8], Female = pal[2])) +
+    scale_fill_manual(values = c(Male = pal[11], Female = pal[12])) +
     theme_minimal() +
     theme_general()
 }
@@ -190,8 +190,13 @@ ui <- fluidPage(
       actionButton("go", "Generate Graph")
     ),
     mainPanel(
-      plotOutput("incomeDistPlot"), 
-      plotOutput("divergingBarPlot")
+      tabsetPanel(
+        tabPanel("Dumbbell Chart", plotOutput("dumbbellChart")),
+        tabPanel("Sector Analysis",
+                plotOutput("incomeDistPlot"), 
+                plotOutput("divergingBarPlot") 
+              )
+      )
     )
   )
 )
@@ -220,6 +225,11 @@ server <- function(input, output) {
     
   })
   
+  output$dumbbellChart <- renderPlot({
+    req(sector_data_frames[[input$sector]])
+    plot_dumbbell_chart(sector_data_frames[[input$sector]])
+  })
+    
   output$incomeDistPlot <- renderPlot({
     req(data_filtered())  # Ensure there is data to plot
     plot_gender_distribution(data_filtered())
