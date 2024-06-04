@@ -119,6 +119,7 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
     labs(title = paste("Diverging Bar Chart of", sector_name, "Sector Pay Gaps in", year),
          x = "Company Name",
          y = "Mean Hourly Pay Difference (%)") +
+    theme_minimal()+
     theme_general() +
     theme(axis.text.y = element_text(size = 4),
           panel.grid.major.y = element_blank(),
@@ -141,7 +142,7 @@ plot_dumbbell_chart <- function(data) {
     gather(key = "Gender_Quartile", value = "Percentage", 
            MaleLowerQuartile:FemaleTopQuartile) %>%
     separate(Gender_Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
-    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))) %>%
+    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "TopQuartile", "UpperMiddleQuartile"))) %>%
     group_by(Year, Gender, Quartile) %>%
     summarize(Percentage = mean(Percentage, na.rm = TRUE), .groups = 'drop') %>%
     ggplot(aes(x = Year, y = Percentage, group = interaction(Quartile, Year))) +
@@ -153,8 +154,8 @@ plot_dumbbell_chart <- function(data) {
          x = "Year",
          y = "Average Percentage",
          color = "Gender") +
-    theme_general() +
     theme(legend.position = "bottom") +
+    theme_general() +
     coord_flip()
 
   ggplotly(p, tooltip = "text")
@@ -208,7 +209,7 @@ plot_gender_distribution <- function(df) {
     labs(title = "Average Percentage by Gender Across Quartiles",
          x = "Quartile",
          y = "Average Percentage") +
-    theme_minimal()  # Assuming theme_general is a custom theme; replace if necessary
+    theme_general()  # Assuming theme_general is a custom theme; replace if necessary
 
   ggplotly(p, tooltip = "text")
 }
@@ -343,9 +344,9 @@ server <- function(input, output, session) {
     plot_diverging_bar_chart(data_filtered(), input$year, input$sector)
   })
 }
-
-
 ```
+
+
 
 ```{r}
 shinyApp(ui = ui, server = server)
