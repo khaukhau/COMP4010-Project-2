@@ -199,6 +199,16 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                )
              )
     ),
+    tabPanel("Overall Analysis",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE)
+               ),
+               mainPanel(
+                 plotOutput("dumbbellChart")
+               )
+             )
+    ),
     tabPanel("Analysis",
              sidebarLayout(
                sidebarPanel(
@@ -206,13 +216,15 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                  selectInput("year", "Select Year:", choices = unique(paygap$Year))
                ),
                mainPanel(
-                 tabsetPanel(
-                   tabPanel("Dumbbell Chart", plotOutput("dumbbellChart")),
-                   tabPanel("Sector Analysis",
-                            plotOutput("incomeDistPlot"), 
-                            plotOutput("divergingBarPlot")
-                   )
-                 )
+                 plotOutput("incomeDistPlot"),
+                 p(HTML("The <b>bar chart</b> represents the average percentage by gender across different income quartiles. Each pair of bars represents a specific quartile, categorized from <b>LowerQuartile</b> to <b>TopQuartile</b> from left to right. 
+                 The <b>blue bars</b> represent the average percentage for <b>male employees</b>, while the <b>pink bars</b> represent the average percentage for <b>female employees</b> in each quartile. The height of each bar indicates the average percentage of employees 
+                 in that particular gender and quartile category. This visualization helps to compare the gender distribution within different earning brackets across the sampled data.")),
+                 plotOutput("divergingBarPlot"),
+                 p(HTML("The <b>diverging bar chart</b> represents the difference in pay gap with respect to gender for <b>various companies</b>. The <b>blue bars</b> 
+                 extending to the right indicate companies where <b>male employees</b> have higher mean hourly pay, 
+                 while the <b>pink bars</b> extending to the left indicate companies where <b>female employees</b> earn more. 
+                  The length of each bar represents the magnitude of the pay difference."))
                )
              )
     ),
@@ -243,7 +255,6 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
     )
   )
 )
-
 
 server <- function(input, output, session) {
   observeEvent(input$continue, {
