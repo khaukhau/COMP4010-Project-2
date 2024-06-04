@@ -39,12 +39,12 @@ filter_by_keyword <- function(df, keywords) {
 
 # List of keywords for different sectors
 sectors_keywords <- list(
-  Tech = c("Tech", "IT"),
+  Tech = c("Tech"),
   Finance = c("Financial", "Finance", "Insurance"),
-  Education = c("Education", "School"),
-  Healthcare = c("Medical", "Pharmaceutical", "Health"),
+  Education = c("Education"),
+  Healthcare = c("Health"),
   Retail = c("Retail"),
-  Entertainment = c("Entertainment", "Art", "Recreation"),
+  Entertainment = c("Entertainment", "Art"),
   Travel = c("Travel"),
   Consulting = c("Consulting"),
   Banking = c("Bank"),
@@ -99,7 +99,9 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
   max_val <- ceiling(max(abs(data$DiffMeanHourlyPercent), na.rm = TRUE))
   
   # Create the plot
-  p <- ggplot(data, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent)) +
+  p <- ggplot(data, aes(x = reorder(CurrentName, DiffMeanHourlyPercent), y = DiffMeanHourlyPercent,
+                        text = paste(CurrentName, 
+                                     "<br>", sprintf("%.2f%%", DiffMeanHourlyPercent)))) +
     geom_bar(data = subset(data, DiffMeanHourlyPercent >= 0), stat = "identity", aes(y = DiffMeanHourlyPercent), fill = pal[11]) +
     geom_bar(data = subset(data, DiffMeanHourlyPercent < 0), stat = "identity", fill = pal[12]) +
     coord_flip() +
@@ -114,55 +116,87 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
           panel.grid.minor.y = element_blank(),
           panel.grid.major.x = element_line(color = "lightgrey", size = 0.5)) 
   
-  
-  return(p)
+  ggplotly(p, tooltip = "text")
+  #return(p)
 }
 
 
 ## Task 2 (Nguyen)
 
 plot_dumbbell_chart <- function(data) {
-  data %>%
+  p <- data %>%
     gather(key = "Gender_Quartile", value = "Percentage", 
            MaleLowerQuartile:FemaleTopQuartile) %>%
     separate(Gender_Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
-    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "TopQuartile", "UpperMiddleQuartile"))) %>%  # Adjust order of appearance
+    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "TopQuartile", "UpperMiddleQuartile"))) %>%
     group_by(Year, Gender, Quartile) %>%
     summarize(Percentage = mean(Percentage, na.rm = TRUE), .groups = 'drop') %>%
     ggplot(aes(x = Year, y = Percentage, group = interaction(Quartile, Year))) +
     geom_line() +
-    geom_point(aes(color = Gender), size = 3) +
+    geom_point(aes(color = Gender, text = paste(sprintf("%.2f%%", Percentage))), size = 3) +
     facet_wrap(~Quartile, scales = "free_y") +
-    # scale_y_continuous(limits = c(35, 65)) +
+    scale_color_manual(values = c("Male" = pal[11], "Female" = pal[12])) +
     labs(title = "Yearly Changes in Quartile Percentages",
          x = "Year",
          y = "Average Percentage",
          color = "Gender") +
-    theme_general() +
     theme(legend.position = "bottom") +
+    theme_general() +
     coord_flip()
+  
+  ggplotly(p, tooltip = "text")
 }
 
-plot <- plot_dumbbell_chart(paygap)
-print(plot)
+#plot <- plot_dumbbell_chart(paygap)
+#print(plot)
 
 
 ## Task 3 (Quan)
 
 plot_gender_distribution <- function(df) {
-  df %>%
-    gather(key = "Quartile", value = "Percentage", MaleLowerQuartile:FemaleTopQuartile) %>%
-    separate(Quartile, into = c("Gender", "Quartile"), sep = "(?<=Male|Female)") %>%
-    mutate(Quartile = factor(Quartile, levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))) %>%
-    ggplot(aes(x = Quartile, y = Percentage, fill = Gender)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    labs(title = "Gender Pay Gap Distribution",
-         x = "Income Quartile",
-         y = "Percentage of Population",
-         fill = "Gender") +
-    scale_fill_manual(values = c(Male = pal[11], Female = pal[12])) +
-    theme_minimal() +
-    theme_general()
+    # Define the specific columns and their pairings
+    selected_columns <- c("MaleLowerQuartile", "FemaleLowerQuartile", 
+                          "MaleLowerMiddleQuartile", "FemaleLowerMiddleQuartile", 
+                          "MaleUpperMiddleQuartile", "FemaleUpperMiddleQuartile", 
+                          "MaleTopQuartile", "FemaleTopQuartile")
+    
+    # Create a factor with levels for ordering in the plot
+    pairs <- factor(c("LowerQuartile", "LowerQuartile", 
+                      "LowerMiddleQuartile", "LowerMiddleQuartile", 
+                      "UpperMiddleQuartile", "UpperMiddleQuartile", 
+                      "TopQuartile", "TopQuartile"),
+                    levels = c("LowerQuartile", "LowerMiddleQuartile", "UpperMiddleQuartile", "TopQuartile"))
+    
+    # Subset the dataframe to include only selected columns
+    df_subset <- select(df, all_of(selected_columns))
+    
+    # Calculate averages of each selected column
+    averages <- colMeans(df_subset, na.rm = TRUE)  # Ensuring NA values are ignored
+    
+    # Convert averages to a dataframe and create a simpler gender identifier
+    average_df <- data.frame(
+      Column = names(averages),
+      Average = as.vector(averages),
+      Quartile = pairs,
+      Gender = ifelse(grepl("Male", names(averages)), "Male", "Female")
+    )
+    
+    # Define colors for each gender
+    colors <- c("Male" = pal[11], "Female" = pal[12])
+    
+    # Plotting using ggplot2
+    p <- ggplot(average_df, aes(x = Quartile, y = Average, fill = Gender,
+                                text = paste(
+                                  sprintf("%.2f%%", Average)))) +
+      geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+      scale_fill_manual(values = colors, name = "Gender",
+                        labels = c("Female", "Male")) +
+      labs(title = "Average Percentage by Gender Across Quartiles",
+           x = "Quartile",
+           y = "Average Percentage") +
+      theme_general()  # Assuming theme_general is a custom theme; replace if necessary
+    
+    ggplotly(p, tooltip = "text")
 }
 
 
@@ -205,22 +239,25 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                  selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE)
                ),
                mainPanel(
-                 plotOutput("dumbbellChart")
+                 plotlyOutput("dumbbellChart"),
+                 p(HTML("The <b>dumbbell</b> chart represents the yearly changes by gender across <b>different income quartiles</b>. 
+                 Each chart represents the gaps in pay for each gender from 2018 to 2022 for a specific income quartile. The <b>blue dots</b> represent the average percentage for <b>male employees</b>, 
+                 while the <b>pink dots</b> represent the average percentage for <b>female employees</b>. This visualization helps to illustrate how the income gap would change across years for each income quartiles."))
                )
              )
     ),
-    tabPanel("Analysis",
+    tabPanel("Sector Analysis",
              sidebarLayout(
                sidebarPanel(
                  selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE),
                  selectInput("year", "Select Year:", choices = unique(paygap$Year))
                ),
                mainPanel(
-                 plotOutput("incomeDistPlot"),
+                 plotlyOutput("incomeDistPlot"),
                  p(HTML("The <b>bar chart</b> represents the average percentage by gender across different income quartiles. Each pair of bars represents a specific quartile, categorized from <b>LowerQuartile</b> to <b>TopQuartile</b> from left to right. 
                  The <b>blue bars</b> represent the average percentage for <b>male employees</b>, while the <b>pink bars</b> represent the average percentage for <b>female employees</b> in each quartile. The height of each bar indicates the average percentage of employees 
                  in that particular gender and quartile category. This visualization helps to compare the gender distribution within different earning brackets across the sampled data.")),
-                 plotOutput("divergingBarPlot"),
+                 plotlyOutput("divergingBarPlot"),
                  p(HTML("The <b>diverging bar chart</b> represents the difference in pay gap with respect to gender for <b>various companies</b>. The <b>blue bars</b> 
                  extending to the right indicate companies where <b>male employees</b> have higher mean hourly pay, 
                  while the <b>pink bars</b> extending to the left indicate companies where <b>female employees</b> earn more. 
@@ -236,13 +273,13 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                         img(src = "member1.jpg", height = "100px", style = "border-radius: 50%;"),
                         h4("Khau Lien Kiet"),
                         p("Email: 20kiet.kl@vinuni.edu.vn"),
-                        p("Favorite Food:")
+                        p("Favorite Food: Jajangmyeon")
                  ),
                  column(4,
                         img(src = "member2.jpg", height = "100px", style = "border-radius: 50%;"),
                         h4("Hoang Khoi Nguyen"),
                         p("Email: 20nguyen.hk@vinuni.edu.vn"),
-                        p("Favorite Food: ")
+                        p("Favorite Food: Chicken fried rice")
                  ),
                  column(4,
                         img(src = "member3.jpg", height = "100px", style = "border-radius: 50%;"),
@@ -258,7 +295,7 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
 
 server <- function(input, output, session) {
   observeEvent(input$continue, {
-    updateTabsetPanel(session, "main_tabs", selected = "Analysis")
+    updateTabsetPanel(session, "main_tabs", selected = "Overall Analysis")
   })
   
   data_filtered <- reactive({
@@ -267,19 +304,19 @@ server <- function(input, output, session) {
     return(sector_data)
   })
   
-  output$dumbbellChart <- renderPlot({
+  output$dumbbellChart <- renderPlotly({
     req(sector_data_frames[[input$sector]])
     plot_dumbbell_chart(sector_data_frames[[input$sector]])
     #req(data_filtered())
     #plot_dumbbell_chart(data_filtered())
   })
   
-  output$incomeDistPlot <- renderPlot({
+  output$incomeDistPlot <- renderPlotly({
     req(data_filtered())
     plot_gender_distribution(data_filtered())
   })
   
-  output$divergingBarPlot <- renderPlot({
+  output$divergingBarPlot <- renderPlotly({
     req(data_filtered())
     plot_diverging_bar_chart(data_filtered(), input$year, input$sector)
   })

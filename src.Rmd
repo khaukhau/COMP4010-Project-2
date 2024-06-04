@@ -129,8 +129,8 @@ plot_diverging_bar_chart <- function(data, year, sector_name) {
   ggplotly(p, tooltip = "text")
 }
 
-plot <- plot_diverging_bar_chart(sector_data_frames[["Finance"]], 2020, "Finance")
-plot
+#plot <- plot_diverging_bar_chart(sector_data_frames[["Finance"]], 2020, "Finance")
+#plot
 
 
 ```
@@ -161,8 +161,8 @@ plot_dumbbell_chart <- function(data) {
   ggplotly(p, tooltip = "text")
 }
 
-plot <- plot_dumbbell_chart(paygap)
-plot
+#plot <- plot_dumbbell_chart(paygap)
+#plot
 
 ```
 
@@ -214,8 +214,8 @@ plot_gender_distribution <- function(df) {
   ggplotly(p, tooltip = "text")
 }
 
-plot <- plot_gender_distribution(sector_data_frames[["Finance"]])
-plot
+#plot <- plot_gender_distribution(sector_data_frames[["Finance"]])
+#plot
 
 ```
 
