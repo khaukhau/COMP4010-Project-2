@@ -270,7 +270,7 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
           selectInput("year", "Select Year:", choices = unique(paygap$Year))
         ),
         mainPanel(
-          plotOutput("incomeDistPlot"), 
+          plotlyOutput("incomeDistPlot"), 
           plotlyOutput("divergingBarPlot")
         )
       )
@@ -333,7 +333,7 @@ server <- function(input, output, session) {
     #plot_dumbbell_chart(data_filtered())
   })
     
-  output$incomeDistPlot <- renderPlot({
+  output$incomeDistPlot <- renderPlotly({
     req(data_filtered())
     plot_gender_distribution(data_filtered())
   })
