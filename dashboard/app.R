@@ -199,6 +199,16 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                )
              )
     ),
+    tabPanel("Overall Analysis",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("sector", "Choose a Sector:", choices = names(sectors_keywords), multiple = FALSE)
+               ),
+               mainPanel(
+                 plotOutput("dumbbellChart")
+               )
+             )
+    ),
     tabPanel("Analysis",
              sidebarLayout(
                sidebarPanel(
@@ -206,13 +216,8 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                  selectInput("year", "Select Year:", choices = unique(paygap$Year))
                ),
                mainPanel(
-                 tabsetPanel(
-                   tabPanel("Dumbbell Chart", plotOutput("dumbbellChart")),
-                   tabPanel("Sector Analysis",
-                            plotOutput("incomeDistPlot"), 
-                            plotOutput("divergingBarPlot")
-                   )
-                 )
+                 plotOutput("incomeDistPlot"), 
+                 plotOutput("divergingBarPlot")
                )
              )
     ),
@@ -233,7 +238,7 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
                         p("Favorite Food: ")
                  ),
                  column(4,
-                        img(src = "member3.jpg", height = "100px", style = "border-radius: 80%;"),
+                        img(src = "member3.jpg", height = "100px", style = "border-radius: 50%;"),
                         h4("Nguyen Duy Anh Quan"),
                         p("Email: 20quan.nda@vinuni.edu.vn"),
                         p("Favorite Food: Ramen")
@@ -243,7 +248,6 @@ We want to explore the gender pay gaps in the UK using the UK Pay Gap data to de
     )
   )
 )
-
 
 server <- function(input, output, session) {
   observeEvent(input$continue, {
